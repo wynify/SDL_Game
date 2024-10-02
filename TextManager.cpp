@@ -33,8 +33,14 @@ void TextManager::HandleInput(SDL_Event& event) {
         }
         else if (event.key.keysym.sym == SDLK_RETURN) {
             // Обрабатываем ввод текста (например, отображаем его на экране)
-            PrintText(userInput, {255, 255, 255, 255}, 20, 20); // Отобразите текст
+            PrintText(userInput, {255, 255, 255, 255}, 100, 100); // Отобразите текст
             userInput.clear(); // Очищаем буфер после ввода
+        }
+        else if (event.key.keysym.sym == SDLK_RETURN){
+            AddNewLine();
+        }
+        else if (event.key.keysym.sym == SDLK_TAB) {
+            userInput += "  ";
         }
     }
 }
@@ -51,17 +57,20 @@ void TextManager::InputText(SDL_Color color, int x, int y) {
 
     PrintText(userInput, color, x, y);
 }
-
 // TextManager.cpp
 const std::string& TextManager::GetUserInput() const {
     return userInput; // Возвращаем текущий текст
 }
 
+
 void TextManager::PrintText(const std::string& text, SDL_Color color, int x, int y) {
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), color);
-    if (textSurface == nullptr) {
-        std::cerr << "Failed to create text surface! SDL_ttf Error: " << TTF_GetError() << std::endl;
-        return;
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        if (textSurface == nullptr) {
+            std::cerr << "Failed to create text surface! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            continue;
+        }
     }
 
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
@@ -76,4 +85,25 @@ void TextManager::PrintText(const std::string& text, SDL_Color color, int x, int
 
     SDL_DestroyTexture(textTexture);
     SDL_FreeSurface(textSurface);
+}
+
+void TextManager::ClearText() {
+    userInput.clear();
+    lines.clear();
+}
+
+void TextManager::AddNewLine() {
+    lines.push_back(userInput); // Добавляем текущую строку в вектор строк
+    userInput.clear(); // Очищаем текущую строку для новой
+}
+
+void TextManager::WrapText() {
+    int textWidth = 0, textHeight = 0;
+
+    // Измеряем ширину текущего текста
+    TTF_SizeText(font, userInput.c_str(), &textWidth, &textHeight);
+    if (textWidth >= 640) {
+        // Перенос строки, если текст превышает ширину окна
+        AddNewLine();
+    }
 }
